@@ -33,35 +33,41 @@ module.exports = function(mac, params) {
 }
 
 const MAC_BYTES = 6;
+const MAC_REPETITIONS = 16;
 
-// @TODO: refactor
+/**
+ * Magic packet is:
+ * FF (repeat 6)
+ * MAC Address (repat 16)
+ */
 function createMagicPacket(mac) {
 
     var macBuffer = new Buffer(MAC_BYTES);
 
-    if (mac.length == 2 * MAC_BYTES + (MAC_BYTES - 1)) {
-        mac = mac.replace(new RegExp(mac[2], 'g'), '');
+    mac.split(':').forEach(function(value, i) {
+        macBuffer[i] = parseInt(value, 16);
+    });
+
+    var buffer = new Buffer(MAC_BYTES + MAC_REPETITIONS * MAC_BYTES);
+
+    // start the magic packet from 6 bytes of FF
+    for (var i = 0; i < MAC_BYTES; i++) {
+        buffer[i] = 0xFF;
     }
 
-    if (mac.length != 2 * MAC_BYTES || mac.match(/[^a-fA-F0-9]/)) {
-        throw new Error("malformed MAC address '" + mac + "'");
-    }
-
-    for (var i = 0; i < MAC_BYTES; ++i) {
-        macBuffer[i] = parseInt(mac.substr(2 * i, 2), 16);
-    }
-
-    var num = 16,
-        buffer = new Buffer((1 + num) * MAC_BYTES);
-
-    for (var i = 0; i < MAC_BYTES; ++i) {
-        buffer[i] = 0xff;
-    }
-
-    for (var i = 0; i < num; ++i) {
-        macBuffer.copy(buffer, (i + 1) * MAC_BYTES, 0, macBuffer.length)
+    // copy mac address 16 times
+    for (var i = 0; i < MAC_REPETITIONS; i++) {
+        macBuffer.copy(buffer, (i + 1) * MAC_BYTES, 0, macBuffer.length);
     }
 
     return buffer;
 
-};
+}
+
+module.exports.isValid = function(mac) {
+    if (mac.length == 2 * MAC_BYTES + (MAC_BYTES - 1)) {
+        mac = mac.replace(new RegExp(mac[2], 'g'), '');
+    }
+
+    return !(mac.length != 2 * MAC_BYTES || mac.match(/[^a-fA-F0-9]/));
+}

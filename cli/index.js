@@ -1,5 +1,7 @@
 var program = require('commander'),
-    wake = require('../');
+    chalk = require('chalk'),
+    wake = require('../'),
+    isValid = require('../').isValid;
 
 program
     .usage('<mac>')
@@ -12,7 +14,14 @@ if (!program.args.length) {
     program.help();
 }
 
-wake(program.args[0], {
+var mac = program.args[0];
+
+if (!isValid(mac)) {
+    console.error('Malformed MAC address %s', chalk.red(mac));
+    process.exit(1);
+}
+
+wake(mac, {
     ip: program.ip,
     port: program.port
 });
