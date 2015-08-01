@@ -1,0 +1,22 @@
+{
+  "name": "wake-on-lan",
+  "version": "0.0.1",
+  "description": "wake-on-lan",
+  "main": "index.js",
+  "bin": {
+    "wake-on-lan": "./bin/wake-on-lan"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sbmaxx/wake-on-lan.git"
+  },
+  "author": "sbmaxx",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sbmaxx/wake-on-lan/issues"
+  },
+  "homepage": "https://github.com/sbmaxx/wake-on-lan",
+  "dependencies": {
+    "commander": "^2.8.1"
+  }
+}
