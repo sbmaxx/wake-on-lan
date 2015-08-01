@@ -1,19 +1,32 @@
 var dgram = require('dgram'),
     net = require('net'),
-    Buffer = require('buffer').Buffer;
+    Buffer = require('buffer').Buffer,
+    chalk = require('chalk');
 
 module.exports = function(mac, params) {
 
     var magicPacket = createMagicPacket(mac),
         socket = dgram.createSocket(net.isIPv6(params.ip) ? 'udp6' : 'udp4');
 
-    if (params.ip !== '255.255.255.255') {
+    if (params.ip === '255.255.255.255') {
         socket.once('listening', function() {
             socket.setBroadcast(true);
         });
     }
 
-    socket.send(magicPacket, 0, magicPacket.length, params.port, params.ip, function() {
+    if (params.ip) {
+        console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
+    } else {
+        console.log('Sending magic packet to %s with IP=%s.', chalk.blue(mac), chalk.magenta(params.ip));
+    }
+
+    socket.send(magicPacket, 0, magicPacket.length, params.port, params.ip, function(err) {
+        if (err) {
+            console.log(chalk.red('Sorry ;('));
+            console.error(err);
+        } else {
+            console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
+        }
         socket.close();
     });
 
@@ -21,6 +34,7 @@ module.exports = function(mac, params) {
 
 const MAC_BYTES = 6;
 
+// @TODO: refactor
 function createMagicPacket(mac) {
 
     var macBuffer = new Buffer(MAC_BYTES);
