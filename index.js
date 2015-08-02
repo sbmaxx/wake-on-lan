@@ -1,33 +1,38 @@
 var dgram = require('dgram'),
+    dns = require('dns'),
     net = require('net'),
     Buffer = require('buffer').Buffer,
-    chalk = require('chalk');
+    chalk = require('chalk'),
+    vow = require('vow');
+
+const BROADCAST = '255.255.255.255';
 
 module.exports = function(mac, params) {
 
     var magicPacket = createMagicPacket(mac),
         socket = dgram.createSocket(net.isIPv6(params.ip) ? 'udp6' : 'udp4');
 
-    if (params.ip === '255.255.255.255') {
-        socket.once('listening', function() {
+    getIP(params).then(function(ip) {
+
+        // @TODO: check if we need to wait until listening await
+        // socket.once('listening');
+        if (ip === BROADCAST) {
             socket.setBroadcast(true);
-        });
-    }
-
-    if (params.ip) {
-        console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
-    } else {
-        console.log('Sending magic packet to %s with IP=%s.', chalk.blue(mac), chalk.magenta(params.ip));
-    }
-
-    socket.send(magicPacket, 0, magicPacket.length, params.port, params.ip, function(err) {
-        if (err) {
-            console.log(chalk.red('Sorry ;('));
-            console.error(err);
+            console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
         } else {
-            console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
+            console.log('Sending magic packet to %s with IP=%s.', chalk.blue(mac), chalk.magenta(ip));
         }
-        socket.close();
+
+        socket.send(magicPacket, 0, magicPacket.length, params.port, ip, function(err) {
+            if (err) {
+                console.log(chalk.red('Sorry ;('));
+                console.error(err);
+            } else {
+                console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
+            }
+            socket.close();
+        });
+
     });
 
 }
@@ -64,7 +69,28 @@ function createMagicPacket(mac) {
 
 }
 
-module.exports.isValid = function(mac) {
+function getIP(params) {
+
+    var defer = vow.defer();
+
+    if (!params.host) {
+        defer.resolve(params.ip);
+    } else {
+        dns.resolve(params.host, function(err, addresses) {
+            if (err) {
+                console.error(err);
+                defer.resolve(BROADCAST)
+            } else {
+                defer.resolve(addresses[0]);
+            }
+        });
+    }
+
+    return defer.promise();
+
+}
+
+module.exports.isMACValid = function(mac) {
     if (mac.length == 2 * MAC_BYTES + (MAC_BYTES - 1)) {
         mac = mac.replace(new RegExp(mac[2], 'g'), '');
     }

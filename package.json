@@ -18,7 +18,8 @@
   "homepage": "https://github.com/sbmaxx/wake-on-lan",
   "dependencies": {
     "chalk": "^1.1.0",
-    "commander": "^2.8.1"
+    "commander": "^2.8.1",
+    "vow": "^0.4.10"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
