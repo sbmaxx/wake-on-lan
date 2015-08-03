@@ -10,14 +10,17 @@ const BROADCAST = '255.255.255.255';
 module.exports = function(mac, params) {
 
     var magicPacket = createMagicPacket(mac),
-        socket = dgram.createSocket(net.isIPv6(params.ip) ? 'udp6' : 'udp4');
+        socket;
 
     getIP(params).then(function(ip) {
 
-        // @TODO: check if we need to wait until listening await
-        // socket.once('listening');
+        socket = dgram.createSocket(net.isIPv6(ip) ? 'udp6' : 'udp4');
+
+        socket.once('listening', function() {
+            socket.setBroadcast(ip === BROADCAST)
+        });
+
         if (ip === BROADCAST) {
-            socket.setBroadcast(true);
             console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
         } else {
             console.log('Sending magic packet to %s with IP=%s.', chalk.blue(mac), chalk.magenta(ip));
@@ -32,6 +35,8 @@ module.exports = function(mac, params) {
             }
             socket.close();
         });
+
+
 
     });
 
