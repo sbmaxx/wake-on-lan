@@ -36,8 +36,6 @@ module.exports = function(mac, params) {
             socket.close();
         });
 
-
-
     });
 
 }
@@ -102,3 +100,50 @@ module.exports.isMACValid = function(mac) {
 
     return !(mac.length != 2 * MAC_BYTES || mac.match(/[^a-fA-F0-9]/));
 }
+
+module.exports.relay = function(mac, params) {
+
+        getIP(params).then(function(ip) {
+            
+            var magicPacket = createMagicPacket(mac);
+            listensocket = dgram.createSocket('udp4');
+            
+            listensocket.on('error', (err) => {
+              console.log(`server error:\n${err.stack}`);
+              listensocket.close();
+            });
+            
+            listensocket.on('message', (msg, rinfo) => {
+            
+              if (msg.equals(magicPacket))
+              {
+                var broadcastsocket = dgram.createSocket(net.isIPv6(ip) ? 'udp6' : 'udp4');
+                
+                broadcastsocket.once('listening', function() {
+                    broadcastsocket.setBroadcast(true);
+                });
+        
+                console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
+
+                broadcastsocket.send(magicPacket, 0, magicPacket.length, params.port, BROADCAST, function(err) {
+                    if (err) {
+                        console.log(chalk.red('Sorry ;('));
+                        console.error(err);
+                    } else {
+                        console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
+                    }
+                    broadcastsocket.close();
+                });
+              }
+            });
+            
+            listensocket.on('listening', () => {
+              const address = listensocket.address();
+              console.log(`server listening ${address.address}:${address.port}`);
+            });
+            
+            listensocket.bind(params.relayport);
+
+        });
+    
+    }

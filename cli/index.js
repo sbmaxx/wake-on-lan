@@ -1,6 +1,7 @@
 var program = require('commander'),
     chalk = require('chalk'),
     wake = require('../'),
+    relay = require('../').relay,
     isMACValid = require('../').isMACValid;
 
 program
@@ -8,6 +9,8 @@ program
     .option('--ip [ip]', 'IP Address [255.255.255.255] of target computer', '255.255.255.255')
     .option('--host [host]', 'Hostname of the target computer')
     .option('--port [port]', 'Port [9]', 9)
+    .option('--relay', 'Listen for packet and then broadcast it')
+    .option('--relayport [port]', 'Listen for relay packet on this port')
 
 program.parse(process.argv);
 
@@ -22,8 +25,19 @@ if (!isMACValid(mac)) {
     process.exit(1);
 }
 
-wake(mac, {
-    ip: program.ip,
-    host: program.host,
-    port: program.port
-});
+if (program.relay) {
+    relay(mac, {
+        ip: program.ip,
+        host: program.host,
+        port: program.port,
+        relayport: program.relayport
+    });
+} else {
+    wake(mac, {
+        ip: program.ip,
+        host: program.host,
+        port: program.port
+    });
+}
+
+
