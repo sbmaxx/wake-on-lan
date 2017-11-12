@@ -48,7 +48,7 @@ const MAC_REPETITIONS = 16;
 /**
  * Magic packet is:
  * FF (repeat 6)
- * MAC Address (repat 16)
+ * MAC Address (repeat 16)
  */
 function createMagicPacket(mac) {
 
