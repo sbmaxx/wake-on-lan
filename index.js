@@ -115,26 +115,25 @@ module.exports.relay = function(mac, params) {
             
             listensocket.on('message', (msg, rinfo) => {
             
-              if (msg.equals(magicPacket))
-              {
-                var broadcastsocket = dgram.createSocket(net.isIPv6(ip) ? 'udp6' : 'udp4');
-                
-                broadcastsocket.once('listening', function() {
-                    broadcastsocket.setBroadcast(true);
-                });
-        
-                console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
+                if (msg.equals(magicPacket)) {
+                    var broadcastsocket = dgram.createSocket(net.isIPv6(ip) ? 'udp6' : 'udp4');
 
-                broadcastsocket.send(magicPacket, 0, magicPacket.length, params.port, BROADCAST, function(err) {
-                    if (err) {
-                        console.log(chalk.red('Sorry ;('));
-                        console.error(err);
-                    } else {
-                        console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
-                    }
-                    broadcastsocket.close();
-                });
-              }
+                    broadcastsocket.once('listening', function() {
+                        broadcastsocket.setBroadcast(true);
+                    });
+
+                    console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
+
+                    broadcastsocket.send(magicPacket, 0, magicPacket.length, params.port, BROADCAST, function(err) {
+                        if (err) {
+                            console.error(chalk.red('Sorry ;('));
+                            console.error(err);
+                        } else {
+                            console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
+                        }
+                        broadcastsocket.close();
+                    });
+                }
             });
             
             listensocket.on('listening', () => {
