@@ -16,6 +16,7 @@
     "url": "https://github.com/sbmaxx/wake-on-lan/issues"
   },
   "homepage": "https://github.com/sbmaxx/wake-on-lan",
+  "engines" : { "node" : ">=6.4.0" },
   "dependencies": {
     "chalk": "^1.1.0",
     "commander": "^2.8.1",

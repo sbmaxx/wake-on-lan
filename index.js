@@ -118,7 +118,7 @@ module.exports.relay = function(mac, params) {
                 if (msg.equals(magicPacket)) {
                     var broadcastsocket = dgram.createSocket(net.isIPv6(ip) ? 'udp6' : 'udp4');
 
-                    broadcastsocket.once('listening', function() {
+                    broadcastsocket.once('listening', () => {
                         broadcastsocket.setBroadcast(true);
                     });
 
