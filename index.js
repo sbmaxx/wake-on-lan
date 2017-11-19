@@ -8,36 +8,61 @@ var dgram = require('dgram'),
 const BROADCAST = '255.255.255.255';
 
 module.exports = function(mac, params) {
-
-    var magicPacket = createMagicPacket(mac),
-        socket;
-
     getIP(params).then(function(ip) {
+        var magicPacket = createMagicPacket(mac);
 
-        socket = dgram.createSocket(net.isIPv6(ip) ? 'udp6' : 'udp4');
-
-        socket.once('listening', function() {
-            socket.setBroadcast(ip === BROADCAST)
-        });
-
-        if (ip === BROADCAST) {
-            console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
+        if (params.relay) {
+            relay(mac, ip, magicPacket, params);
         } else {
-            console.log('Sending magic packet to %s with IP=%s.', chalk.blue(mac), chalk.magenta(ip));
+            send(mac, ip, magicPacket, params);
         }
+    });
+}
 
-        socket.send(magicPacket, 0, magicPacket.length, params.port, ip, function(err) {
-            if (err) {
-                console.log(chalk.red('Sorry ;('));
-                console.error(err);
-            } else {
-                console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
-            }
-            socket.close();
-        });
-
+function send(mac, ip, magicPacket, params) {
+    var socket = dgram.createSocket(net.isIPv6(ip) ? 'udp6' : 'udp4');
+    
+    socket.once('listening', function() {
+        socket.setBroadcast(ip === BROADCAST)
     });
 
+    if (ip === BROADCAST) {
+        console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
+    } else {
+        console.log('Sending magic packet to %s with IP=%s.', chalk.blue(mac), chalk.magenta(ip));
+    }
+
+    socket.send(magicPacket, 0, magicPacket.length, params.port, ip, function(err) {
+        if (err) {
+            console.log(chalk.red('Sorry ;('));
+            console.error(err);
+        } else {
+            console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
+        }
+        socket.close();
+    });
+}
+
+function relay(mac, ip, magicPacket, params) {
+    socket = dgram.createSocket('udp4');
+    
+    socket.on('error', (err) => {
+        console.log(`Server error:\n${err.stack}`);
+        socket.close();
+    });
+    
+    socket.on('message', (msg, rinfo) => {
+        if (msg.equals(magicPacket)) {
+            send(mac, ip, magicPacket, params);
+        }
+    });
+    
+    socket.on('listening', () => {
+        const address = socket.address();
+        console.log(`Server listening ${address.address}:${address.port}`);
+    });
+    
+    socket.bind(params.relayport);
 }
 
 const MAC_BYTES = 6;
@@ -49,7 +74,6 @@ const MAC_REPETITIONS = 16;
  * MAC Address (repat 16)
  */
 function createMagicPacket(mac) {
-
     var macBuffer = new Buffer(MAC_BYTES);
 
     mac.split(':').forEach(function(value, i) {
@@ -69,11 +93,9 @@ function createMagicPacket(mac) {
     }
 
     return buffer;
-
 }
 
 function getIP(params) {
-
     var defer = vow.defer();
 
     if (!params.host) {
@@ -90,7 +112,6 @@ function getIP(params) {
     }
 
     return defer.promise();
-
 }
 
 module.exports.isMACValid = function(mac) {
@@ -100,49 +121,3 @@ module.exports.isMACValid = function(mac) {
 
     return !(mac.length != 2 * MAC_BYTES || mac.match(/[^a-fA-F0-9]/));
 }
-
-module.exports.relay = function(mac, params) {
-
-        getIP(params).then(function(ip) {
-            
-            var magicPacket = createMagicPacket(mac);
-            listensocket = dgram.createSocket('udp4');
-            
-            listensocket.on('error', (err) => {
-              console.log(`server error:\n${err.stack}`);
-              listensocket.close();
-            });
-            
-            listensocket.on('message', (msg, rinfo) => {
-            
-                if (msg.equals(magicPacket)) {
-                    var broadcastsocket = dgram.createSocket(net.isIPv6(ip) ? 'udp6' : 'udp4');
-
-                    broadcastsocket.once('listening', () => {
-                        broadcastsocket.setBroadcast(true);
-                    });
-
-                    console.log('Broadcasting magic packet to %s.', chalk.blue(mac));
-
-                    broadcastsocket.send(magicPacket, 0, magicPacket.length, params.port, BROADCAST, function(err) {
-                        if (err) {
-                            console.error(chalk.red('Sorry ;('));
-                            console.error(err);
-                        } else {
-                            console.log('%s. Your computer is awakening right now...', chalk.green('All\'s fine'));
-                        }
-                        broadcastsocket.close();
-                    });
-                }
-            });
-            
-            listensocket.on('listening', () => {
-              const address = listensocket.address();
-              console.log(`server listening ${address.address}:${address.port}`);
-            });
-            
-            listensocket.bind(params.relayport);
-
-        });
-    
-    }

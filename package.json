@@ -1,6 +1,6 @@
 {
   "name": "wake-on-lan",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "wake-on-lan",
   "main": "index.js",
   "bin": {
