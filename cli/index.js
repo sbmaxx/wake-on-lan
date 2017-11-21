@@ -3,11 +3,14 @@ var program = require('commander'),
     wake = require('../'),
     isMACValid = require('../').isMACValid;
 
+
 program
     .usage('<mac>')
     .option('--ip [ip]', 'IP Address [255.255.255.255] of target computer', '255.255.255.255')
     .option('--host [host]', 'Hostname of the target computer')
     .option('--port [port]', 'Port [9]', 9)
+    .option('--relay', 'Listen for packet and then broadcast it', 0)
+    .option('--relayport [port]', 'Listen for relay packet on this port', 7576)
 
 program.parse(process.argv);
 
@@ -25,5 +28,7 @@ if (!isMACValid(mac)) {
 wake(mac, {
     ip: program.ip,
     host: program.host,
-    port: program.port
+    port: program.port,
+    relay: program.relay,
+    relayport: program.relayport
 });
