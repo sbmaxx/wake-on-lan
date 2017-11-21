@@ -1,6 +1,6 @@
 {
   "name": "wake-on-lan",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "wake-on-lan",
   "main": "index.js",
   "bin": {
@@ -16,7 +16,9 @@
     "url": "https://github.com/sbmaxx/wake-on-lan/issues"
   },
   "homepage": "https://github.com/sbmaxx/wake-on-lan",
-  "engines" : { "node" : ">=6.4.0" },
+  "engines": {
+    "node": ">=6.4.0"
+  },
   "dependencies": {
     "chalk": "^1.1.0",
     "commander": "^2.8.1",
